@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSAP Matrix Rain & Splash Effect</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0B0A09;
+            color: #F2E8D4;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .section {
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 800px;
+        }
+        
+        h1 {
+            font-size: clamp(2rem, 5vw, 4rem);
+            margin-bottom: 1rem;
+            color: #B0793E;
+        }
+        
+        /* Matrix Rain Container */
+        .matrix-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        /* Individual code character */
+        .code-char {
+            position: absolute;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 20px;
+            color: #237A6D;
+            text-shadow: 0 0 5px #237A6D;
+            opacity: 0;
+            user-select: none;
+        }
+        
+        .code-char.bright {
+            color: #3AD6C4;
+            text-shadow: 0 0 10px #3AD6C4, 0 0 20px #237A6D;
+        }
+        
+        /* Splash particle */
+        .splash-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #237A6D;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 0 6px #237A6D;
+        }
+        
+        .splash-particle.bright {
+            background: #B0793E;
+            box-shadow: 0 0 10px #B0793E;
+        }
+        
+        /* Section styles */
+        .section:nth-child(odd) {
+            background: rgba(11, 10, 9, 0.95);
+        }
+        
+        .section:nth-child(even) {
+            background: rgba(0, 0, 0, 0.95);
+        }
+    </style>
+</head>
+<body>
+    <section class="section" id="section1">
+        <div class="matrix-container"></div>
+        <div class="content">
+            <h1>Welcome to Cxves</h1>
+            <p>Scroll down to see the Matrix rain effect with splash animations</p>
+        </div>
+    </section>
+    
+    <section class="section" id="section2">
+        <div class="matrix-container"></div>
+        <div class="content">
+            <h1>AI Deployment</h1>
+            <p>Watch the code rain intensify as you scroll</p>
+        </div>
+    </section>
+    
+    <section class="section" id="section3">
+        <div class="matrix-container"></div>
+        <div class="content">
+            <h1>The Future is Here</h1>
+            <p>Experience the digital splash effect at section boundaries</p>
+        </div>
+    </section>
+    
+    <script>
+        // Matrix rain configuration
+        const matrixConfig = {
+            chars: 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+            columnWidth: 25,
+            dropSpeed: { min: 2, max: 8 },
+            fadeSpeed: 0.05,
+            brightness: 0.15,
+            splashParticles: 50
+        };
+        
+        class MatrixRain {
+            constructor(container) {
+                this.container = container;
+                this.columns = [];
+                this.timeline = null;
+                this.splashTimeline = null;
+                this.init();
+            }
+            
+            init() {
+                const containerWidth = this.container.offsetWidth;
+                const numColumns = Math.floor(containerWidth / matrixConfig.columnWidth);
+                
+                // Create columns
+                for (let i = 0; i < numColumns; i++) {
+                    this.createColumn(i);
+                }
+                
+                // Set up scroll trigger
+                this.setupScrollTrigger();
+            }
+            
+            createColumn(index) {
+                const column = {
+                    x: index * matrixConfig.columnWidth + matrixConfig.columnWidth / 2,
+                    chars: [],
+                    speed: gsap.utils.random(matrixConfig.dropSpeed.min, matrixConfig.dropSpeed.max)
+                };
+                
+                // Create initial characters for the column
+                const numChars = Math.floor(window.innerHeight / 25) + 10;
+                for (let i = 0; i < numChars; i++) {
+                    const char = this.createChar(column.x, -i * 25);
+                    column.chars.push(char);
+                }
+                
+                this.columns.push(column);
+                this.animateColumn(column);
+            }
+            
+            createChar(x, y) {
+                const char = document.createElement('span');
+                char.className = 'code-char';
+                char.textContent = matrixConfig.chars[Math.floor(Math.random() * matrixConfig.chars.length)];
+                char.style.left = x + 'px';
+                char.style.top = y + 'px';
+                
+                // Randomly make some characters brighter
+                if (Math.random() < matrixConfig.brightness) {
+                    char.classList.add('bright');
+                }
+                
+                this.container.appendChild(char);
+                return char;
+            }
+            
+            animateColumn(column) {
+                const tl = gsap.timeline({ repeat: -1 });
+                
+                column.chars.forEach((char, i) => {
+                    const delay = i * 0.1;
+                    
+                    tl.to(char, {
+                        y: window.innerHeight + 100,
+                        duration: column.speed,
+                        ease: "none",
+                        onStart: () => {
+                            // Change character randomly
+                            char.textContent = matrixConfig.chars[Math.floor(Math.random() * matrixConfig.chars.length)];
+                            gsap.set(char, { opacity: 1 });
+                        },
+                        onComplete: () => {
+                            // Reset position and fade out
+                            gsap.set(char, { y: -50 });
+                            gsap.to(char, { opacity: 0, duration: 0.5 });
+                        }
+                    }, delay);
+                });
+                
+                column.timeline = tl;
+            }
+            
+            setupScrollTrigger() {
+                const section = this.container.closest('.section');
+                
+                // Create splash particles
+                const splashParticles = [];
+                for (let i = 0; i < matrixConfig.splashParticles; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'splash-particle';
+                    if (Math.random() < 0.3) particle.classList.add('bright');
+                    this.container.appendChild(particle);
+                    splashParticles.push(particle);
+                }
+                
+                // Main scroll trigger for rain intensity
+                ScrollTrigger.create({
+                    trigger: section,
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: true,
+                    onUpdate: (self) => {
+                        const progress = self.progress;
+                        
+                        // Adjust rain speed based on scroll
+                        this.columns.forEach(column => {
+                            if (column.timeline) {
+                                column.timeline.timeScale(0.5 + progress * 1.5);
+                            }
+                        });
+                        
+                        // Adjust opacity based on scroll
+                        gsap.to(this.container, {
+                            opacity: 0.2 + progress * 0.3,
+                            duration: 0.3
+                        });
+                    }
+                });
+                
+                // Splash effect at section boundaries
+                ScrollTrigger.create({
+                    trigger: section,
+                    start: "bottom bottom",
+                    onEnter: () => this.triggerSplash(splashParticles, section),
+                });
+                
+                ScrollTrigger.create({
+                    trigger: section,
+                    start: "top top",
+                    onLeaveBack: () => this.triggerSplash(splashParticles, section),
+                });
+            }
+            
+            triggerSplash(particles, section) {
+                const centerX = section.offsetWidth / 2;
+                const centerY = section.offsetHeight / 2;
+                
+                particles.forEach((particle, i) => {
+                    const angle = (i / particles.length) * Math.PI * 2;
+                    const distance = gsap.utils.random(100, 400);
+                    const endX = centerX + Math.cos(angle) * distance;
+                    const endY = centerY + Math.sin(angle) * distance;
+                    
+                    gsap.set(particle, {
+                        x: centerX,
+                        y: centerY,
+                        scale: 0,
+                        opacity: 1
+                    });
+                    
+                    gsap.to(particle, {
+                        x: endX,
+                        y: endY,
+                        scale: gsap.utils.random(1, 3),
+                        opacity: 0,
+                        duration: gsap.utils.random(0.8, 1.5),
+                        ease: "power2.out",
+                        delay: i * 0.01
+                    });
+                });
+                
+                // Flash effect
+                const flash = document.createElement('div');
+                flash.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: radial-gradient(circle at center, rgba(35, 122, 109, 0.3), transparent 70%);
+                    pointer-events: none;
+                `;
+                section.appendChild(flash);
+                
+                gsap.fromTo(flash, 
+                    { opacity: 0 },
+                    { 
+                        opacity: 1, 
+                        duration: 0.2,
+                        yoyo: true,
+                        repeat: 1,
+                        onComplete: () => flash.remove()
+                    }
+                );
+            }
+        }
+        
+        // Initialize Matrix rain for each section
+        document.addEventListener('DOMContentLoaded', () => {
+            gsap.registerPlugin(ScrollTrigger);
+            
+            document.querySelectorAll('.matrix-container').forEach(container => {
+                new MatrixRain(container);
+            });
+            
+            // Smooth scroll behavior
+            gsap.to(window, {
+                scrollTo: 0,
+                duration: 0
+            });
+        });
+        
+        // Handle window resize
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                location.reload(); // Simple solution for demo - in production, recreate columns
+            }, 250);
+        });
+    </script>
+</body>
+</html>

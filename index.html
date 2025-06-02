@@ -1,0 +1,1975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cxves - AI deployment without the chaos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0B0A09;
+            color: #F2E8D4;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        
+        /* Progress bar */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #0B0A09;
+            z-index: 50;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #237A6D, #B0793E);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        /* Section styles */
+        .section {
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .hero-section {
+            flex-direction: column;
+            background: #0B0A09; /* Coal background for hero */
+        }
+        
+        /* Section backgrounds using Cxves color palette */
+        .section-today {
+            background: linear-gradient(135deg, #237A6D 0%, rgba(35, 122, 109, 0.8) 100%);
+            color: #F2E8D4;
+        }
+        
+        .section-incubating {
+            background: linear-gradient(135deg, rgba(11, 10, 9, 0.95) 0%, rgba(0, 0, 0, 0.9) 100%);
+            color: #F2E8D4;
+        }
+        
+        .section-ventures {
+            background: linear-gradient(135deg, #B0793E 0%, rgba(176, 121, 62, 0.8) 100%);
+            color: #0B0A09;
+        }
+        
+        .section-newsletter {
+            background: linear-gradient(135deg, rgba(35, 122, 109, 0.2) 0%, rgba(11, 10, 9, 0.95) 100%);
+            color: #F2E8D4;
+        }
+        
+        .section-cta {
+            background: linear-gradient(to right, #237A6D, #B0793E);
+            color: #0B0A09;
+        }
+        
+        /* Adjust text colors for specific sections */
+        .section-ventures h2,
+        .section-ventures h3 {
+            color: #0B0A09;
+        }
+        
+        .section-ventures .venture-content {
+            color: rgba(11, 10, 9, 0.7);
+        }
+        
+        .section-ventures .venture-placeholder:hover .venture-content {
+            color: rgba(11, 10, 9, 0.9);
+        }
+        
+        .content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        /* Matrix Rain Container - ONLY for hero section */
+        .matrix-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            opacity: 0.2;
+        }
+        
+        /* Hide matrix containers on non-hero sections */
+        .section:not(.hero-section) .matrix-container {
+            display: none;
+        }
+        
+        /* Individual code character */
+        .code-char {
+            position: absolute;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 20px;
+            color: #237A6D;
+            text-shadow: 0 0 5px #237A6D;
+            opacity: 0;
+            user-select: none;
+        }
+        
+        .code-char.bright {
+            color: #3AD6C4;
+            text-shadow: 0 0 10px #3AD6C4, 0 0 20px #237A6D;
+        }
+        
+        /* Splash particle */
+        .splash-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #237A6D;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 0 6px #237A6D;
+        }
+        
+        .splash-particle.bright {
+            background: #B0793E;
+            box-shadow: 0 0 10px #B0793E;
+        }
+        
+        /* Logo and hero styling */
+        .logo-container {
+            width: 350px;
+            height: 350px;
+            margin: 0 auto 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .logo-img {
+            width: 280px;
+            height: 280px;
+            object-fit: contain;
+            position: relative;
+            z-index: 1;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .bounce {
+            animation: bounce 2s infinite;
+        }
+        
+        /* Typography */
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 600;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-variant: small-caps;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #F2E8D4, #B0793E);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: lowercase;
+        }
+        
+        h2 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 4rem;
+            text-align: center;
+        }
+        
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #B0793E;
+        }
+        
+        .hero-subtitle {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 300;
+            margin-bottom: 3rem;
+        }
+        
+        .hero-description {
+            font-size: clamp(1.1rem, 2.5vw, 1.25rem);
+            opacity: 0.8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Grid layouts */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .card {
+            background: rgba(242, 232, 212, 0.1);
+            border: 1px solid rgba(242, 232, 212, 0.2);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            transform: translateY(0);
+            backdrop-filter: blur(10px);
+        }
+        
+        .card:hover {
+            border-color: rgba(242, 232, 212, 0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: translateY(-8px);
+            background: rgba(242, 232, 212, 0.15);
+        }
+        
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .card-description {
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-features {
+            list-style: none;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        .card:hover .card-features {
+            opacity: 0.9;
+        }
+        
+        .card-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-features li::before {
+            content: "•";
+            color: #F2E8D4;
+        }
+        
+        /* Incubating cards */
+        .incubating-card {
+            background: rgba(242, 232, 212, 0.05);
+            border: 1px solid rgba(242, 232, 212, 0.1);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+        
+        .incubating-card:hover {
+            border-color: rgba(242, 232, 212, 0.3);
+            background: rgba(242, 232, 212, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .card-status {
+            font-size: 0.875rem;
+            opacity: 0.7;
+            background: rgba(242, 232, 212, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 9999px;
+            height: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(to right, #237A6D, #B0793E);
+            transition: all 0.5s ease;
+            opacity: 0.8;
+        }
+        
+        .incubating-card:hover .progress-bar-fill {
+            opacity: 1;
+        }
+        
+        /* Ventures grid */
+        .ventures-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .venture-placeholder {
+            aspect-ratio: 1;
+            background: rgba(11, 10, 9, 0.2);
+            border: 2px dashed rgba(11, 10, 9, 0.4);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .venture-placeholder:hover {
+            border-color: rgba(11, 10, 9, 0.6);
+            background: rgba(11, 10, 9, 0.3);
+        }
+        
+        .venture-content {
+            text-align: center;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+        
+        .venture-placeholder:hover .venture-content {
+            opacity: 0.8;
+        }
+        
+        .venture-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .venture-text {
+            font-size: 0.75rem;
+        }
+        
+        /* Newsletter section */
+        .newsletter-form {
+            display: flex;
+            gap: 1rem;
+            max-width: 400px;
+            margin: 0 auto 4rem;
+        }
+        
+        .email-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(242, 232, 212, 0.3);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            color: #F2E8D4;
+            font-size: 1rem;
+        }
+        
+        .email-input::placeholder {
+            color: rgba(242, 232, 212, 0.5);
+        }
+        
+        .email-input:focus {
+            outline: none;
+            border-color: #B0793E;
+        }
+        
+        .subscribe-btn {
+            background: #237A6D;
+            color: #F2E8D4;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .subscribe-btn:hover {
+            background: #B0793E;
+        }
+        
+        /* Updates section */
+        .updates-list {
+            text-align: left;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .update-item {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            opacity: 0.8;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+        
+        .update-item:hover {
+            opacity: 1;
+        }
+        
+        .update-date {
+            color: #237A6D;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+        
+        .update-content {
+            flex: 1;
+        }
+        
+        .update-text {
+            transition: color 0.3s ease;
+        }
+        
+        .update-item:hover .update-text {
+            color: #B0793E;
+        }
+        
+        .update-tag {
+            font-size: 0.75rem;
+            background: rgba(35, 122, 109, 0.3);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            margin-top: 0.25rem;
+            display: inline-block;
+        }
+        
+        /* CTA section - keep existing styles */
+        .cta-button {
+            background: #0B0A09;
+            color: #F2E8D4;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 1rem 3rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 0 auto;
+        }
+        
+        .cta-button:hover {
+            background: #000;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #000;
+            padding: 3rem 2rem;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .social-links a {
+            color: #F2E8D4;
+            transition: color 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .social-links a:hover {
+            color: #237A6D;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+            opacity: 0.6;
+        }
+        
+        .footer-links a {
+            color: inherit;
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            opacity: 1;
+        }
+        
+        .copyright {
+            font-size: 0.875rem;
+            opacity: 0.6;
+        }
+        
+        /* Responsive */
+        @media (min-width: 768px) {
+            .footer-content {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .newsletter-form {
+                flex-direction: column;
+            }
+            
+            .ventures-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Chevron icon */
+        .chevron-down {
+            margin: 5rem auto 0;
+            width: 2rem;
+            height: 2rem;
+            opacity: 0.6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .chevron-down:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+            color: #B0793E;
+        }
+        
+        /* Subscription message animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+        
+        /* Spinner animation */
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        /* Contact Form Styles */
+        .cta-container {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .contact-form-container {
+            background: transparent;
+            border-radius: 1rem;
+            padding: 3rem;
+            backdrop-filter: none;
+            border: none;
+            position: relative;
+            z-index: 100;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            box-sizing: border-box;
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        .contact-form {
+            width: 100%;
+            position: relative;
+            z-index: 101;
+            display: block !important;
+            opacity: 1 !important;
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            position: relative;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-label {
+            display: block;
+            color: #F2E8D4;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            opacity: 1;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        .form-input {
+            width: 100%;
+            background: rgba(11, 10, 9, 0.8);
+            border: 2px solid rgba(242, 232, 212, 0.3);
+            border-radius: 0.5rem;
+            padding: 0.875rem 1rem;
+            color: #F2E8D4;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+            animation: borderPulse 3s ease-in-out infinite;
+        }
+        
+        .form-input::placeholder {
+            color: rgba(242, 232, 212, 0.6);
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #237A6D;
+            background: rgba(11, 10, 9, 0.9);
+            box-shadow: 0 0 0 3px rgba(35, 122, 109, 0.3), 0 0 20px rgba(35, 122, 109, 0.2);
+            animation: borderGlow 2s ease-in-out infinite;
+        }
+        
+        .form-input:focus + .input-animation {
+            animation: inputPulse 0.6s ease-out;
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+        
+        .form-select {
+            cursor: pointer;
+        }
+        
+        .input-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 0.5rem;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .form-button {
+            padding: 0.875rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            animation: buttonPulse 4s ease-in-out infinite;
+        }
+        
+        .form-button.primary {
+            background: #237A6D;
+            color: #F2E8D4;
+            box-shadow: 0 4px 15px rgba(35, 122, 109, 0.3);
+        }
+        
+        .form-button.primary:hover {
+            background: #1e6b5e;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(35, 122, 109, 0.4);
+            animation: buttonGlow 1.5s ease-in-out infinite;
+        }
+        
+        .form-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            animation: none !important;
+        }
+        
+        /* Button animations */
+        @keyframes buttonPulse {
+            0%, 100% {
+                box-shadow: 0 4px 15px rgba(35, 122, 109, 0.3);
+            }
+            50% {
+                box-shadow: 0 6px 20px rgba(35, 122, 109, 0.5);
+            }
+        }
+        
+        @keyframes buttonGlow {
+            0%, 100% {
+                box-shadow: 0 8px 25px rgba(35, 122, 109, 0.4);
+            }
+            50% {
+                box-shadow: 0 12px 35px rgba(35, 122, 109, 0.6);
+            }
+        }
+        
+        /* Contact form animations */
+        @keyframes formSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        /* Animated border effects */
+        @keyframes borderPulse {
+            0%, 100% {
+                border-color: rgba(242, 232, 212, 0.3);
+                box-shadow: 0 0 0 0 rgba(242, 232, 212, 0.1);
+            }
+            50% {
+                border-color: rgba(242, 232, 212, 0.5);
+                box-shadow: 0 0 0 2px rgba(242, 232, 212, 0.2);
+            }
+        }
+        
+        @keyframes borderGlow {
+            0%, 100% {
+                box-shadow: 0 0 0 3px rgba(35, 122, 109, 0.3), 0 0 20px rgba(35, 122, 109, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 0 5px rgba(35, 122, 109, 0.5), 0 0 30px rgba(35, 122, 109, 0.4);
+            }
+        }
+        
+        @keyframes inputPulse {
+            0% {
+                background: rgba(35, 122, 109, 0.2);
+                transform: scale(1);
+            }
+            50% {
+                background: rgba(35, 122, 109, 0.3);
+                transform: scale(1.02);
+            }
+            100% {
+                background: rgba(35, 122, 109, 0.1);
+                transform: scale(1);
+            }
+        }
+        
+        /* Form validation states */
+        .form-input.invalid {
+            border-color: #B0793E;
+            box-shadow: 0 0 0 3px rgba(176, 121, 62, 0.2);
+        }
+        
+        .form-input.valid {
+            border-color: #237A6D;
+        }
+        
+        /* Contact form message */
+        .contact-message {
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            text-align: center;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .contact-message.success {
+            background: rgba(35, 122, 109, 0.2);
+            color: #237A6D;
+            border: 1px solid rgba(35, 122, 109, 0.3);
+        }
+        
+        .contact-message.error {
+            background: rgba(176, 121, 62, 0.2);
+            color: #B0793E;
+            border: 1px solid rgba(176, 121, 62, 0.3);
+        }
+        
+        /* Responsive design for contact form */
+        @media (max-width: 768px) {
+            .contact-form-container {
+                padding: 2rem 1.5rem;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .form-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        /* Contact form override - force visibility when shown */
+        .contact-form-container[style*="display: block"] {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            width: 100% !important;
+            max-width: 800px !important;
+            min-width: 300px !important;
+            height: auto !important;
+            min-height: 400px !important;
+            position: relative !important;
+            z-index: 1000 !important;
+            margin: 0 auto !important;
+            padding: 3rem !important;
+            background-color: rgba(11, 10, 9, 0.95) !important;
+            border-radius: 1rem !important;
+            border: 1px solid rgba(242, 232, 212, 0.2) !important;
+            box-sizing: border-box !important;
+            transform: none !important;
+        }
+        
+        .contact-form-container[style*="display: block"] .contact-form {
+            display: block !important;
+            width: 100% !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress bar -->
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="section hero-section" id="hero">
+        <div class="matrix-container"></div>
+        <div class="content">
+            <div class="logo-container">
+                <img src="cxves-logo.png" alt="Cxves Logo" class="logo-img">
+            </div>
+            <h1>Welcome to cxves</h1>
+            <p class="hero-subtitle">Where ideas take physical form.</p>
+            <p class="hero-description">
+                From AI deployment, compliance & creation houses to micro-SaaS acquisitions, open-source tooling, & robotics labs.</p>
+                <br>
+                <h3>Possibility, deployed.</h3>
+            </p>
+            <div class="chevron-down bounce" onclick="scrollToNextSection()">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6,9 12,15 18,9"></polyline>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- What We Ship Today -->
+    <section class="section section-today" id="today">
+        <div class="content">
+            <h2>What We'll Ship Soon</h2>
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-icon">🔍</div>
+                    <h3>AI Readiness Audit</h3>
+                    <p class="card-description">Comprehensive assessment of your organization's AI maturity and deployment readiness.</p>
+                    <ul class="card-features">
+                        <li>Tech stack analysis</li>
+                        <li>Team capability assessment</li>
+                        <li>Infrastructure evaluation</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🤖</div>
+                    <h3>Agent Orchestration</h3>
+                    <p class="card-description">Design and implement multi-agent systems that work seamlessly with your existing infrastructure.</p>
+                    <ul class="card-features">
+                        <li>Multi-agent coordination</li>
+                        <li>API integration</li>
+                        <li>Performance monitoring</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-icon">📋</div>
+                    <h3>Compliance Roadmaps</h3>
+                    <p class="card-description">Navigate AI regulations with custom compliance strategies tailored to your industry.</p>
+                    <ul class="card-features">
+                        <li>Regulatory mapping</li>
+                        <li>Risk assessment</li>
+                        <li>Implementation guidance</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What We're Incubating -->
+    <section class="section section-incubating" id="incubating">
+        <div class="content">
+            <h2>What We're Incubating</h2>
+            <div class="cards-grid">
+                <div class="incubating-card">
+                    <div class="card-header">
+                        <h3>Micro-SaaS Acquisitions</h3>
+                        <span class="card-status">2025 Q2</span>
+                    </div>
+                    <p class="card-description">Building a portfolio of AI-enhanced vertical SaaS products.</p>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: 65%"></div>
+                    </div>
+                </div>
+                <div class="incubating-card">
+                    <div class="card-header">
+                        <h3>Open-Source Tooling</h3>
+                        <span class="card-status">2025 Q3</span>
+                    </div>
+                    <p class="card-description">Contributing to the AI ecosystem with enterprise-grade tools.</p>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: 40%"></div>
+                    </div>
+                </div>
+                <div class="incubating-card">
+                    <div class="card-header">
+                        <h3>Creative Robotics Lab</h3>
+                        <span class="card-status">2025 Q4</span>
+                    </div>
+                    <p class="card-description">Exploring the intersection of AI, robotics, and creative expression.</p>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: 25%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Ventures Grid -->
+    <section class="section section-ventures" id="ventures">
+        <div class="content">
+            <h2>Our Coves Portfolio</h2>
+            <div class="ventures-grid">
+                <div class="venture-placeholder">
+                    <div class="venture-content">
+                        <div class="venture-icon">⚬</div>
+                        <p class="venture-text">Coming Soon</p>
+                    </div>
+                </div>
+                <div class="venture-placeholder">
+                    <div class="venture-content">
+                        <div class="venture-icon">⚬</div>
+                        <p class="venture-text">Coming Soon</p>
+                    </div>
+                </div>
+                <div class="venture-placeholder">
+                    <div class="venture-content">
+                        <div class="venture-icon">⚬</div>
+                        <p class="venture-text">Coming Soon</p>
+                    </div>
+                </div>
+                <div class="venture-placeholder">
+                    <div class="venture-content">
+                        <div class="venture-icon">⚬</div>
+                        <p class="venture-text">Coming Soon</p>
+                    </div>
+                </div>
+                
+            </div>
+            <p style="text-align: center; margin-top: 2rem; opacity: 0.6;">
+                Strategic acquisitions expanding our AI-first SaaS ecosystem
+            </p>
+        </div>
+    </section>
+
+    <!-- Newsletter / Updates -->
+    <section class="section section-newsletter" id="newsletter">
+        <div class="content">
+            <h2>Stay Inside the Cxves</h2>
+            <p style="font-size: 1.25rem; margin-bottom: 3rem; opacity: 0.8;">
+                Get weekly updates on our latest ventures, tools, and insights.
+            </p>
+            
+            <div class="newsletter-form">
+                <input type="email" class="email-input" placeholder="your@email.com" id="emailInput">
+                <button class="subscribe-btn" onclick="handleSubscribe()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m4 4 16 16-16-2z"></path>
+                        <path d="m4 4 6 8 16-2"></path>
+                    </svg>
+                    Subscribe
+                </button>
+            </div>
+
+            <div class="updates-list">
+                <h3 style="color: #B0793E; margin-bottom: 1.5rem;">Recent Updates</h3>
+                <div class="update-item">
+                    <span class="update-date">2025.06.01</span>
+                    <div class="update-content">
+                        <p class="update-text">🚀 Launched cxves.io with a focus on AI readiness, compliance, and agent orchestration.</p>
+                        <span class="update-tag">Company</span>
+                    </div>
+                </div>
+                <div class="update-item">
+                    <span class="update-date">2025.06.01</span>
+                    <div class="update-content">
+                        <p class="update-text">Published initial PRD for Cxves.io landing experience.</p>
+                        <span class="update-tag">Product</span>
+                    </div>
+                </div>
+                <div class="update-item">
+                    <span class="update-date">2025.05.31</span>
+                    <div class="update-content">
+                        <p class="update-text">Secured professional email & DNS routing through Google Admin.</p>
+                        <span class="update-tag">Operations</span>
+                    </div>
+                </div>
+                <div class="update-item">
+                    <span class="update-date">2025.05.31</span>
+                    <div class="update-content">
+                        <p class="update-text">💻 Established Dynadot & Google Workspace integration for cxves.io</p>
+                        <span class="update-tag">Infrastructure</span>
+                    </div>
+                </div>
+                <div class="update-item">
+                    <span class="update-date">2025.05.07</span>
+                    <div class="update-content">
+                        <p class="update-text">🔐 Integrated workspace authentication and custom DNS for platform staging.</p>
+                        <span class="update-tag">Engineering</span>
+                    </div>
+                </div>
+                <div class="update-item">
+                    <span class="update-date">2025.05.05</span>
+                    <div class="update-content">
+                        <p class="update-text">📂 Developed initial PRD for Kuzzin AI Companion</p>
+                        <span class="update-tag">Vision</span>
+                    </div>
+                </div>
+                <div class="update-item">
+                    <span class="update-date">2025.05.03</span>
+                    <div class="update-content">
+                        <p class="update-text">🌱 Confirmed core brand philosophy & company branches under Cxves</p>
+                        <span class="update-tag">R&D</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section section-cta" id="cta">
+        <div class="content">
+            <h2 style="color: #0B0A09; margin-bottom: 2rem;">Ready to Deploy AI the Right Way?</h2>
+            <p style="color: rgba(11, 10, 9, 0.8); font-size: 1.25rem; margin-bottom: 3rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                Let's discuss your AI deployment needs. Schedule a discovery call, get an AI readiness audit, or explore our agent orchestration solutions.
+            </p>
+            
+            <!-- Contact Form (always visible) -->
+            <div class="cta-container" id="ctaContainer">
+                <div class="contact-form-container" id="contactFormContainer" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
+                    <form class="contact-form" id="contactForm">
+                        <div class="form-header">
+                            <h3 style="color: #F2E8D4; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);">Let's Connect</h3>
+                            <p style="color: rgba(242, 232, 212, 0.9); margin-bottom: 2rem; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);">
+                                Schedule a discovery call, ask questions, or just say hello.
+                            </p>
+                        </div>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="contactName" class="form-label">Name *</label>
+                                <input type="text" id="contactName" class="form-input" placeholder="Your full name" required>
+                                <div class="input-animation"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="contactEmail" class="form-label">Email *</label>
+                                <input type="email" id="contactEmail" class="form-input" placeholder="your@email.com" required>
+                                <div class="input-animation"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="contactCompany" class="form-label">Company</label>
+                                <input type="text" id="contactCompany" class="form-input" placeholder="Your company name">
+                                <div class="input-animation"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="contactPhone" class="form-label">Phone</label>
+                                <input type="tel" id="contactPhone" class="form-input" placeholder="+1 (555) 123-4567">
+                                <div class="input-animation"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="contactType" class="form-label">I'm interested in *</label>
+                            <select id="contactType" class="form-input form-select" required>
+                                <option value="">Select an option</option>
+                                <option value="discovery-call">30-min Discovery Call</option>
+                                <option value="ai-audit">AI Readiness Audit</option>
+                                <option value="agent-orchestration">Agent Orchestration</option>
+                                <option value="compliance">Compliance Roadmap</option>
+                                <option value="partnership">Partnership Opportunities</option>
+                                <option value="general">General Inquiry</option>
+                            </select>
+                            <div class="input-animation"></div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="contactMessage" class="form-label">Message</label>
+                            <textarea id="contactMessage" class="form-input form-textarea" placeholder="Tell us about your project, timeline, or any questions you have..." rows="4"></textarea>
+                            <div class="input-animation"></div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="form-button primary" id="contactSubmitBtn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                                </svg>
+                                Send Message
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="social-links">
+                <a href="#" aria-label="GitHub">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                </a>
+                <a href="#" aria-label="Twitter">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                    </svg>
+                </a>
+                <a href="#" aria-label="LinkedIn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="footer-links">
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+                <a href="#">Contact</a>
+            </div>
+            <p class="copyright">© 2025 Cxves. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Matrix rain configuration
+        const matrixConfig = {
+            chars: 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+            columnWidth: 35,
+            dropSpeed: { min: 3, max: 6 },
+            fadeSpeed: 0.08,
+            brightness: 0.12,
+            splashParticles: 30,
+            maxCharsPerColumn: 15
+        };
+
+        class MatrixRain {
+            constructor(container) {
+                this.container = container;
+                this.columns = [];
+                this.timeline = null;
+                this.splashTimeline = null;
+                this.splashParticles = [];
+                this.isActive = true;
+                this.init();
+            }
+
+            init() {
+                const containerWidth = this.container.offsetWidth;
+                const numColumns = Math.floor(containerWidth / matrixConfig.columnWidth);
+
+                // Create columns
+                for (let i = 0; i < numColumns; i++) {
+                    this.createColumn(i);
+                }
+
+                // Create splash particles
+                this.createSplashParticles();
+
+                // Set up scroll trigger - only for hero section
+                this.setupScrollTrigger();
+            }
+
+            createColumn(index) {
+                const column = {
+                    x: index * matrixConfig.columnWidth + matrixConfig.columnWidth / 2,
+                    chars: [],
+                    speed: gsap.utils.random(matrixConfig.dropSpeed.min, matrixConfig.dropSpeed.max),
+                    timeline: null
+                };
+
+                // Create limited initial characters for the column
+                for (let i = 0; i < matrixConfig.maxCharsPerColumn; i++) {
+                    const char = this.createChar(column.x, -i * 30);
+                    column.chars.push(char);
+                }
+
+                this.columns.push(column);
+                this.animateColumn(column);
+            }
+
+            createChar(x, y) {
+                const char = document.createElement('span');
+                char.className = 'code-char';
+                char.textContent = matrixConfig.chars[Math.floor(Math.random() * matrixConfig.chars.length)];
+                char.style.left = x + 'px';
+                char.style.top = y + 'px';
+
+                // Randomly make some characters brighter
+                if (Math.random() < matrixConfig.brightness) {
+                    char.classList.add('bright');
+                }
+
+                this.container.appendChild(char);
+                return char;
+            }
+
+            createSplashParticles() {
+                // Create splash particles for section boundary effect
+                for (let i = 0; i < matrixConfig.splashParticles; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'splash-particle';
+                    if (Math.random() < 0.3) particle.classList.add('bright');
+                    particle.style.opacity = '0';
+                    this.container.appendChild(particle);
+                    this.splashParticles.push(particle);
+                }
+            }
+
+            animateColumn(column) {
+                if (!this.isActive) return;
+                
+                const heroHeight = this.container.closest('.hero-section').offsetHeight;
+                const tl = gsap.timeline({ repeat: -1 });
+
+                column.chars.forEach((char, i) => {
+                    const delay = i * 0.15;
+
+                    tl.to(char, {
+                        y: heroHeight - 10,
+                        duration: column.speed,
+                        ease: "none",
+                        onStart: () => {
+                            if (!this.isActive) return;
+                            char.textContent = matrixConfig.chars[Math.floor(Math.random() * matrixConfig.chars.length)];
+                            gsap.set(char, { opacity: 1 });
+                        },
+                        onComplete: () => {
+                            if (!this.isActive) return;
+                            this.triggerSplash(char.offsetLeft, heroHeight - 10);
+                            gsap.set(char, { y: -50 });
+                            gsap.to(char, { opacity: 0, duration: 0.3 });
+                        }
+                    }, delay);
+                });
+
+                column.timeline = tl;
+            }
+
+            triggerSplash(x, y) {
+                if (!this.isActive || this.splashParticles.length === 0) return;
+
+                const numParticles = Math.min(12, this.splashParticles.length);
+                const availableParticles = this.splashParticles.filter(p => 
+                    gsap.getProperty(p, "opacity") === 0
+                ).slice(0, numParticles);
+
+                availableParticles.forEach((particle, i) => {
+                    const angle = (i / numParticles) * Math.PI * 2;
+                    const distance = gsap.utils.random(80, 200);
+                    const endX = x + Math.cos(angle) * distance;
+                    const endY = y + Math.sin(angle) * distance;
+
+                    gsap.set(particle, {
+                        x: x,
+                        y: y,
+                        scale: 0,
+                        opacity: 1
+                    });
+
+                    gsap.to(particle, {
+                        x: endX,
+                        y: endY,
+                        scale: gsap.utils.random(1, 2.5),
+                        opacity: 0,
+                        duration: gsap.utils.random(0.6, 1.2),
+                        ease: "power2.out",
+                        delay: i * 0.03
+                    });
+                });
+
+                if (Math.random() < 0.4) {
+                    const flash = document.createElement('div');
+                    flash.style.cssText = `
+                        position: absolute;
+                        bottom: -5px;
+                        left: 0;
+                        width: 100%;
+                        height: 30px;
+                        background: linear-gradient(to top, rgba(35, 122, 109, 0.6), rgba(35, 122, 109, 0.2), transparent);
+                        pointer-events: none;
+                        z-index: 15;
+                    `;
+                    this.container.appendChild(flash);
+
+                    gsap.fromTo(flash, 
+                        { opacity: 0 },
+                        { 
+                            opacity: 1, 
+                            duration: 0.15,
+                            yoyo: true,
+                            repeat: 1,
+                            onComplete: () => {
+                                if (flash.parentNode) {
+                                    flash.remove();
+                                }
+                            }
+                        }
+                    );
+                }
+
+                this.createBoundaryEffect(y);
+            }
+
+            createBoundaryEffect(y) {
+                const boundaryLine = document.createElement('div');
+                boundaryLine.style.cssText = `
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 2px;
+                    background: linear-gradient(to right, transparent, #237A6D, #B0793E, #237A6D, transparent);
+                    pointer-events: none;
+                    z-index: 20;
+                    opacity: 0;
+                `;
+                this.container.appendChild(boundaryLine);
+
+                gsap.to(boundaryLine, {
+                    opacity: 0.7,
+                    duration: 0.3,
+                    yoyo: true,
+                    repeat: 1,
+                    onComplete: () => {
+                        if (boundaryLine.parentNode) {
+                            boundaryLine.remove();
+                        }
+                    }
+                });
+            }
+
+            setupScrollTrigger() {
+                const section = this.container.closest('.section');
+
+                ScrollTrigger.create({
+                    trigger: section,
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: true,
+                    onUpdate: (self) => {
+                        if (!this.isActive) return;
+                        
+                        const progress = self.progress;
+
+                        this.columns.forEach(column => {
+                            if (column.timeline) {
+                                column.timeline.timeScale(0.8 + progress * 1.0);
+                            }
+                        });
+
+                        gsap.to(this.container, {
+                            opacity: 0.15 + progress * 0.2,
+                            duration: 0.3
+                        });
+                    }
+                });
+
+                ScrollTrigger.create({
+                    trigger: section,
+                    start: "bottom top",
+                    onEnter: () => {
+                        this.cleanup();
+                    },
+                    onLeaveBack: () => {
+                        this.isActive = true;
+                        gsap.to(this.container, {
+                            opacity: 0.2,
+                            duration: 0.5
+                        });
+                        this.columns.forEach(column => {
+                            this.animateColumn(column);
+                        });
+                    }
+                });
+            }
+
+            cleanup() {
+                this.isActive = false;
+                
+                gsap.to(this.container, {
+                    opacity: 0,
+                    duration: 1,
+                    onComplete: () => {
+                        this.columns.forEach(column => {
+                            if (column.timeline) {
+                                column.timeline.kill();
+                                column.timeline = null;
+                            }
+                            column.chars.forEach(char => {
+                                if (char.parentNode) {
+                                    char.remove();
+                                }
+                            });
+                            column.chars = [];
+                        });
+                        
+                        this.splashParticles.forEach(particle => {
+                            if (particle.parentNode) {
+                                particle.remove();
+                            }
+                        });
+                        this.splashParticles = [];
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            gsap.registerPlugin(ScrollTrigger);
+
+            const heroMatrixContainer = document.querySelector('.hero-section .matrix-container');
+            if (heroMatrixContainer) {
+                new MatrixRain(heroMatrixContainer);
+            }
+
+            ScrollTrigger.create({
+                trigger: document.body,
+                start: "top top",
+                end: "bottom bottom",
+                onUpdate: (self) => {
+                    const progress = self.progress * 100;
+                    document.getElementById('progressFill').style.width = progress + '%';
+                }
+            });
+        });
+
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                ScrollTrigger.refresh();
+            }, 250);
+        });
+
+        // Newsletter subscription with Google Sheets integration
+        async function handleSubscribe() {
+            const emailInput = document.getElementById('emailInput');
+            const subscribeBtn = document.querySelector('.subscribe-btn');
+            const email = emailInput.value.trim();
+            
+            // Validate email
+            if (!email) {
+                showMessage('Please enter an email address.', 'error');
+                return;
+            }
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessage('Please enter a valid email address.', 'error');
+                return;
+            }
+            
+            // Show loading state
+            const originalText = subscribeBtn.innerHTML;
+            subscribeBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="m9 12 2 2 4-4"></path>
+                </svg>
+                Subscribing...
+            `;
+            subscribeBtn.disabled = true;
+            
+            try {
+                // Replace this URL with your Google Apps Script web app URL
+                const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2Ctig-rvUzHYV4M0fhNyFhlONGutPJgC__gLSdYYE5XnvagcfAMiSbQ_V_X3DnVaU3A/exec';
+                
+                console.log('Attempting to submit email:', email);
+                console.log('Script URL:', SCRIPT_URL);
+                
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'no-cors', // Switch back to no-cors to bypass CORS restrictions
+                    body: JSON.stringify({ email: email })
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                console.log('Response type:', response.type);
+                
+                // With no-cors mode, we can't read the response content
+                // But if we reach this point without throwing an error, the request was sent
+                if (response.type === 'opaque') {
+                    // This means the request was sent successfully but we can't read the response
+                    showMessage('🎉 Successfully subscribed to Cxves updates!', 'success');
+                    emailInput.value = '';
+                    return;
+                }
+                
+                // If somehow we can read the response (shouldn't happen in no-cors mode)
+                const responseText = await response.text();
+                console.log('Raw response text:', responseText);
+                
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                    console.log('Parsed response data:', result);
+                } catch (parseError) {
+                    console.error('Failed to parse JSON response:', parseError);
+                    console.log('Response was not valid JSON:', responseText);
+                    
+                    // If response contains HTML, it might be an authentication redirect
+                    if (responseText.includes('<HTML>') || responseText.includes('ServiceLogin')) {
+                        showMessage('Authentication required. Please check Google Apps Script deployment settings.', 'error');
+                        return;
+                    }
+                    
+                    // If we can't parse but no error was thrown, assume success
+                    showMessage('🎉 Successfully subscribed to Cxves updates!', 'success');
+                    emailInput.value = '';
+                    return;
+                }
+                
+                if (result && result.success) {
+                    showMessage('🎉 Successfully subscribed to Cxves updates!', 'success');
+                    emailInput.value = '';
+                } else {
+                    const errorMsg = result ? result.message : 'Unknown error occurred';
+                    console.error('Subscription failed:', result);
+                    showMessage(errorMsg || 'Subscription failed. Please try again.', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Subscription error details:', error);
+                console.error('Error name:', error.name);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                
+                // Provide more specific error messages
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    showMessage('Unable to connect to subscription service. Please try again in a moment.', 'error');
+                } else if (error.name === 'TypeError' && error.message.includes('NetworkError')) {
+                    showMessage('Network error. Please check your internet connection.', 'error');
+                } else if (error.name === 'TypeError' && error.message.includes('CORS')) {
+                    showMessage('Security error. Please contact support.', 'error');
+                } else if (error.message.includes('Failed to fetch')) {
+                    showMessage('Connection failed. The subscription service may be temporarily unavailable.', 'error');
+                } else {
+                    showMessage(`Subscription error: ${error.message}. Please try again or contact support.`, 'error');
+                }
+            } finally {
+                // Restore button state
+                subscribeBtn.innerHTML = originalText;
+                subscribeBtn.disabled = false;
+            }
+        }
+        
+        function showMessage(message, type) {
+            // Remove existing message
+            const existingMessage = document.querySelector('.subscription-message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+            
+            // Create new message element
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `subscription-message ${type}`;
+            messageDiv.textContent = message;
+            
+            // Style the message
+            messageDiv.style.cssText = `
+                margin-top: 1rem;
+                padding: 0.75rem 1rem;
+                border-radius: 0.5rem;
+                font-size: 0.9rem;
+                text-align: center;
+                animation: slideIn 0.3s ease;
+                ${type === 'success' 
+                    ? 'background: rgba(35, 122, 109, 0.2); color: #237A6D; border: 1px solid rgba(35, 122, 109, 0.3);'
+                    : 'background: rgba(176, 121, 62, 0.2); color: #B0793E; border: 1px solid rgba(176, 121, 62, 0.3);'
+                }
+            `;
+            
+            // Insert after the newsletter form
+            const newsletterForm = document.querySelector('.newsletter-form');
+            newsletterForm.parentNode.insertBefore(messageDiv, newsletterForm.nextSibling);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => messageDiv.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        // Contact form submission handler
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - initializing contact form...');
+            
+            const contactForm = document.getElementById('contactForm');
+            const contactFormContainer = document.getElementById('contactFormContainer');
+            
+            console.log('Contact Form:', contactForm);
+            console.log('Contact Form Container:', contactFormContainer);
+            
+            // Ensure contact form is visible
+            if (contactFormContainer) {
+                contactFormContainer.style.setProperty('display', 'block', 'important');
+                contactFormContainer.style.setProperty('opacity', '1', 'important');
+                contactFormContainer.style.setProperty('visibility', 'visible', 'important');
+                console.log('Contact form container is visible');
+            }
+            
+            if (contactForm) {
+                contactForm.addEventListener('submit', handleContactSubmit);
+                console.log('Contact form submit handler attached');
+            }
+            
+            // Add input animations
+            const formInputs = document.querySelectorAll('.form-input');
+            console.log('Found form inputs:', formInputs.length);
+            
+            formInputs.forEach(input => {
+                input.addEventListener('focus', (e) => {
+                    const animation = e.target.nextElementSibling;
+                    if (animation && animation.classList.contains('input-animation')) {
+                        if (typeof gsap !== 'undefined') {
+                            gsap.to(animation, {
+                                background: 'rgba(35, 122, 109, 0.2)',
+                                scale: 1.02,
+                                duration: 0.3,
+                                ease: "power2.out"
+                            });
+                        }
+                    }
+                });
+                
+                input.addEventListener('blur', (e) => {
+                    const animation = e.target.nextElementSibling;
+                    if (animation && animation.classList.contains('input-animation')) {
+                        if (typeof gsap !== 'undefined') {
+                            gsap.to(animation, {
+                                background: 'transparent',
+                                scale: 1,
+                                duration: 0.3,
+                                ease: "power2.out"
+                            });
+                        }
+                    }
+                    
+                    // Validation styling
+                    if (e.target.hasAttribute('required') && e.target.value) {
+                        e.target.classList.add('valid');
+                        e.target.classList.remove('invalid');
+                    }
+                });
+            });
+        });
+
+        async function handleContactSubmit(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('contactSubmitBtn');
+            const originalText = submitBtn.innerHTML;
+            
+            // Get form data
+            const formData = {
+                name: document.getElementById('contactName').value.trim(),
+                email: document.getElementById('contactEmail').value.trim(),
+                company: document.getElementById('contactCompany').value.trim(),
+                phone: document.getElementById('contactPhone').value.trim(),
+                type: document.getElementById('contactType').value,
+                message: document.getElementById('contactMessage').value.trim()
+            };
+            
+            // Validate required fields
+            if (!formData.name || !formData.email || !formData.type) {
+                showContactMessage('Please fill in all required fields.', 'error');
+                highlightInvalidFields();
+                return;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email)) {
+                showContactMessage('Please enter a valid email address.', 'error');
+                document.getElementById('contactEmail').classList.add('invalid');
+                return;
+            }
+            
+            // Show loading state with animation
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v6l4 2"></path>
+                </svg>
+                Sending...
+            `;
+            
+            try {
+                // REPLACE THIS URL WITH YOUR NEW CONTACT FORM SCRIPT URL
+                const CONTACT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxSpUyBuEzpoBrcZVzouP54FTUeQryvCDSuHidMUmi2kmErZ-hqa5fVfBi2S9Yr0Zyb/exec';
+                
+                console.log('Submitting contact form:', formData);
+                
+                const response = await fetch(CONTACT_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'no-cors',
+                    body: JSON.stringify(formData)
+                });
+                
+                console.log('Contact form response:', response);
+                
+                // Since we're using no-cors, assume success if no error was thrown
+                showContactMessage('🎉 Thank you for your message! We\'ll get back to you within 24 hours.', 'success');
+                
+                // Reset form after delay
+                setTimeout(() => {
+                    document.getElementById('contactForm').reset();
+                    clearContactMessage();
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Contact form error:', error);
+                showContactMessage('Failed to send message. Please try again or email us directly at info@cxves.io.', 'error');
+            } finally {
+                // Restore button state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        }
+
+        function showContactMessage(message, type) {
+            // Remove existing message
+            const existingMessage = document.querySelector('.contact-message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+            
+            // Create new message
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `contact-message ${type}`;
+            messageDiv.textContent = message;
+            
+            // Insert after form actions
+            const formActions = document.querySelector('.form-actions');
+            formActions.parentNode.insertBefore(messageDiv, formActions.nextSibling);
+            
+            // Animate message appearance
+            gsap.fromTo(messageDiv, {
+                opacity: 0,
+                y: -10,
+                scale: 0.95
+            }, {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                duration: 0.4,
+                ease: "back.out(1.7)"
+            });
+            
+            // Auto-remove success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        gsap.to(messageDiv, {
+                            opacity: 0,
+                            y: -10,
+                            duration: 0.3,
+                            onComplete: () => messageDiv.remove()
+                        });
+                    }
+                }, 5000);
+            }
+        }
+
+        function clearContactMessage() {
+            const existingMessage = document.querySelector('.contact-message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+        }
+
+        function highlightInvalidFields() {
+            const requiredFields = ['contactName', 'contactEmail', 'contactType'];
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    field.classList.add('invalid');
+                    field.classList.remove('valid');
+                    
+                    // Animate invalid field
+                    gsap.fromTo(field, {
+                        x: -5
+                    }, {
+                        x: 5,
+                        duration: 0.1,
+                        yoyo: true,
+                        repeat: 3,
+                        ease: "power2.inOut",
+                        onComplete: () => {
+                            gsap.set(field, { x: 0 });
+                        }
+                    });
+                }
+            });
+        }
+
+        function scrollToNextSection() {
+            const nextSection = document.getElementById('today');
+            if (nextSection) {
+                nextSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Test function for debugging contact form
+        function testContactForm() {
+            console.log('Testing contact form functionality...');
+            console.log('GSAP available:', typeof gsap !== 'undefined');
+            console.log('ScrollTrigger available:', typeof ScrollTrigger !== 'undefined');
+            
+            const ctaContainer = document.getElementById('ctaContainer');
+            const contactFormContainer = document.getElementById('contactFormContainer');
+            
+            console.log('Elements found:');
+            console.log('- ctaContainer:', !!ctaContainer, ctaContainer);
+            console.log('- contactFormContainer:', !!contactFormContainer, contactFormContainer);
+            
+            if (ctaContainer) {
+                console.log('CTA container display:', window.getComputedStyle(ctaContainer).display);
+                console.log('CTA container visibility:', window.getComputedStyle(ctaContainer).visibility);
+                console.log('CTA container opacity:', window.getComputedStyle(ctaContainer).opacity);
+            }
+            
+            if (contactFormContainer) {
+                console.log('Contact form display:', window.getComputedStyle(contactFormContainer).display);
+                console.log('Contact form visibility:', window.getComputedStyle(contactFormContainer).visibility);
+                console.log('Contact form opacity:', window.getComputedStyle(contactFormContainer).opacity);
+            }
+            
+            // Force open the contact form
+            if (ctaContainer && contactFormContainer) {
+                console.log('Forcing contact form to open...');
+                ctaContainer.style.display = 'none';
+                contactFormContainer.style.display = 'block';
+                contactFormContainer.style.opacity = '1';
+                contactFormContainer.style.transform = 'none';
+                console.log('Contact form should now be visible');
+            }
+        }
+        
+        // Make test function available globally
+        window.testContactForm = testContactForm;
+    </script>
+</body>
+</html> 
